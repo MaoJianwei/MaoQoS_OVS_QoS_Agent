@@ -3235,6 +3235,7 @@ bridge_destroy(struct bridge *br, bool del)
         logTemp = NULL;
 
         maoQosShutdown(br->MaoQos);
+        maoQosFreeOne(br->MaoQos);
         br->MaoQos = NULL;
 
 
