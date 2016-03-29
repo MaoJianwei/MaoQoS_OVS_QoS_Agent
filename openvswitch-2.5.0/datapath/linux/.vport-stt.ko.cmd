@@ -1,0 +1,1 @@
+cmd_/home/mao/OVS/openvswitch-2.5.0/datapath/linux/vport-stt.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/mao/OVS/openvswitch-2.5.0/datapath/linux/vport-stt.ko /home/mao/OVS/openvswitch-2.5.0/datapath/linux/vport-stt.o /home/mao/OVS/openvswitch-2.5.0/datapath/linux/vport-stt.mod.o
