@@ -68,7 +68,8 @@ void maoQosShutdown(struct maoQos * maoQosModule);
 void * workBash(void * args);
 void * workSocket(void * args);
 
-
+char * maoParseCmdProtocol(char * protocolBuf);
+int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShutdown);
 
 
 /*Mao: below is reference copy*/

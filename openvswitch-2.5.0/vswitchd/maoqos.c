@@ -20,9 +20,22 @@ int maoLog(char * logStr, char * log_master_name) {
 	if (NULL == log_master_name)
 		log_master_name = MaoLogDefaultMaster;
 
-	FILE * log = fopen("/home/mao/maoOVSlog/1.txt", "a+");
-	if (NULL == log)
+	char * logName1 = "/home/mao/maoOVSlog/";
+	char * logName2 = ".txt";
+
+	char * logName = calloc(1, strlen(logName1) + strlen(logName2) + strlen(log_master_name) + 1); // +1 for \0
+	strcat(logName, logName1);
+	strcat(logName, log_master_name);
+	strcat(logName, logName2);
+
+
+
+	FILE * log = fopen(logName, "a+");
+
+	if (NULL == log){
+		free(logName);
 		return 1;
+	}
 
 	char * logTemp = (char *) calloc(1,strlen(logStr) + strlen(log_master_name) + 2 + 1 + 1); // +2 for ", "    +1 for \n    +1 for \0
 	sprintf(logTemp, "%s, %s\n", log_master_name, logStr);
@@ -32,6 +45,7 @@ int maoLog(char * logStr, char * log_master_name) {
 	fclose(log);
 
 	free(logTemp);
+	free(logName);
 	return 0;
 }
 
@@ -226,8 +240,12 @@ void * workBash(void * module) {
 
 	struct maoQos * maoQosModule = (struct maoQos *) module;
 
+	maoLog("INFO, Bash working...", maoQosModule->myBoss->name);
 
 	while (0 == maoQosModule->needShutdown) {
+
+		maoLog("INFO, lock mutex", maoQosModule->myBoss->name);
+
 
 		pthread_mutex_lock(maoQosModule->pMutex);
 
@@ -245,23 +263,39 @@ void * workBash(void * module) {
 			continue;
 		}
 
+
 		char * cmdPayload = maoDeQueue(maoQosModule->cmdQueue);
 
 		pthread_mutex_unlock(maoQosModule->pMutex);
 
 		if (NULL == cmdPayload) {
+			maoLog("Warning, cmd string is NULL", maoQosModule->myBoss->name);
 			continue;
 		}
 
-		char * cmdBash = (char*) calloc(1,
-				strlen(cmdHead) + strlen(cmdPayload) + 1); // should not use sizeof
+
+
+		maoLog("INFO, have got cmd string", maoQosModule->myBoss->name);
+		maoLog(cmdPayload, maoQosModule->myBoss->name);
+
+		char * cmdBash = (char*) calloc(1, strlen(cmdHead) + strlen(cmdPayload) + 1); // should not use sizeof
 		strcat(cmdBash, cmdHead);
 		strcat(cmdBash, cmdPayload);
+
+
+
+		maoLog("INFO, run bash", maoQosModule->myBoss->name);
+		maoLog(cmdBash, maoQosModule->myBoss->name);
 
 		FILE * bashPipe = popen(cmdBash, "r");
 		pclose(bashPipe);
 
+		maoLog("INFO, run bash finish", maoQosModule->myBoss->name);
+
+
+
 		free(cmdBash);
+		free(cmdPayload);
 	}
 
 	//TODO: any Destroy
@@ -403,37 +437,81 @@ void * workSocket(void * module) {
 		maoLog("INFO, quit Connect and Hello", maoQosModule->myBoss->name);
 
 
-		char buf[1024] = { 0 };
+		//char buf[1024] = { 0 };
+
+		// Mao Qos Protocol v0.9
 		while (0 == maoQosModule->needShutdown) {
 
-			int recvRet = recv(connectSocket, buf, 1023, 0);// TODO: Further deal, robustness
+			maoLog("INFO, wait for protocol length", maoQosModule->myBoss->name);
 
-			if (-1 == recvRet) {
-				continue;
+			// ------ recv lengthBehind
+			char * lenBuf = (char*) calloc(1, 4);
+			int maoRecvRet = maoSocketRecv(&connectSocket, lenBuf, 4, &(maoQosModule->needShutdown));// TODO: Further deal, robustness
+			if (-1 == maoRecvRet) {
+
+				free(lenBuf);
+				lenBuf = NULL;
+
+				maoLog("Warning, recv protocol length fail", maoQosModule->myBoss->name);
+
+				break;// different from above, because the above will re-init the socket
 			}
 
+			maoLog("INFO, get protocol length", maoQosModule->myBoss->name);
 
+			int cmdLength = 0;
+			memcpy(&cmdLength, lenBuf, 4);
+			free(lenBuf);
+			lenBuf = NULL;
+
+			//wait length cost much time, so we should check needShutdown here
 			if (0 != maoQosModule->needShutdown) {
 				break;
 			}
 
 
-			//printf("recvRet: %d, error: %d buf: %s\n", recvRet, errno, buf);
+			maoLog("INFO, wait protocol content", maoQosModule->myBoss->name);
 
-			char * cmdPayload = (char*) calloc(1, 1); //TODO: protocol de-encapsulate
+			// ------ recv cmd string
+			char * protocolBuf = (char*) calloc(1, cmdLength+1);
+			maoRecvRet = maoSocketRecv(&connectSocket, protocolBuf, cmdLength, &(maoQosModule->needShutdown)); // TODO: Further deal, robustness
+			if (-1 == maoRecvRet) {
 
+				free(protocolBuf);
+				protocolBuf = NULL;
+
+				maoLog("Warning, recv cmd string fail", maoQosModule->myBoss->name);
+
+				break; // different from above, because the above will re-init the socket
+			}
+
+			maoLog("INFO, start parse cmd", maoQosModule->myBoss->name);
+
+			char * cmd = maoParseCmdProtocol(protocolBuf);
+
+			free(protocolBuf);
+			protocolBuf = NULL;
+
+
+			maoLog("INFO, cmd ready for enqueue", maoQosModule->myBoss->name);
+			maoLog(cmd, maoQosModule->myBoss->name);
 
 
 			pthread_mutex_lock(maoQosModule->pMutex);
 
-			maoEnQueue(maoQosModule->cmdQueue, cmdPayload);
+			maoEnQueue(maoQosModule->cmdQueue, cmd);
 
 			pthread_mutex_unlock(maoQosModule->pMutex);
 
 			pthread_cond_signal(maoQosModule->pCond);
 
+			maoLog("INFO, cmd is enqueued, signal is sent", maoQosModule->myBoss->name);
+
 		}
 		maoLog("INFO, quit Protocol Communication", maoQosModule->myBoss->name);
+
+		close(connectSocket);
+		connectSocket = -1;
 
 		free(controllerIP);
 		controllerIP = NULL;
@@ -444,4 +522,45 @@ void * workSocket(void * module) {
 	return NULL;
 	//pthread_exit(NULL);
 }
+
+/**
+ * Mao Qos Protocol v0.9
+ * protocolBuf should be free outside
+ * @return: calloc inside, should be free outside
+ */
+char * maoParseCmdProtocol(char * protocolBuf){
+
+	char * cmd = (char*) calloc(1, strlen(protocolBuf)+1);
+
+	strcpy(cmd, protocolBuf);
+
+	return cmd;
+}
+
+/**
+ * outside should check needShutdown immediately
+ * @ return should not be used in normal way, except -1
+ */
+int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShutdown){
+
+	int dataRecvLen = 0;
+	int recvRet = 0;
+	while ( ((-1 != recvRet)||((-1 == recvRet)&&(11 == errno))) && dataRecvLen != wantBytes && 0 == *needShutdown ) {
+
+		recvRet = recv(*connectSocket, buf+recvRet, wantBytes-recvRet, 0);
+		if(recvRet > 0){
+			dataRecvLen += recvRet;
+		}
+	}
+
+	if (-1 == recvRet) {
+		return -1;
+	}else{
+		if(dataRecvLen != wantBytes){
+			maoLog("Error, maoSocketRecv length not equal", NULL);
+		}
+		return dataRecvLen;
+	}
+}
+
 
