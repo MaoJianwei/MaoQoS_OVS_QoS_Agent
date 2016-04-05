@@ -1,1 +1,0 @@
-cmd_/home/mao/OVS/openvswitch-2.5.0/datapath/linux/openvswitch.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/mao/OVS/openvswitch-2.5.0/datapath/linux/openvswitch.ko /home/mao/OVS/openvswitch-2.5.0/datapath/linux/openvswitch.o /home/mao/OVS/openvswitch-2.5.0/datapath/linux/openvswitch.mod.o

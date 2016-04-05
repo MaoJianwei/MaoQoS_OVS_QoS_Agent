@@ -1,5 +1,5 @@
-vswitchd/bridge.o: vswitchd/bridge.c /usr/include/stdc-predef.h config.h \
- vswitchd/bridge.h /usr/include/errno.h /usr/include/features.h \
+vswitchd/bridge.o: vswitchd/bridge.c /usr/include/stdc-predef.h \
+ vswitchd/bridge.h config.h /usr/include/errno.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -116,13 +116,15 @@ vswitchd/bridge.o: vswitchd/bridge.c /usr/include/stdc-predef.h config.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h /usr/include/getopt.h \
  /usr/include/x86_64-linux-gnu/bits/unistd.h lib/sflow.h \
- lib/vlan-bitmap.h
+ lib/vlan-bitmap.h vswitchd/maoqos.h /usr/include/malloc.h \
+ /usr/include/x86_64-linux-gnu/sys/queue.h ofproto/connmgr.h lib/match.h \
+ ofproto/ofproto.h
 
 /usr/include/stdc-predef.h:
 
-config.h:
-
 vswitchd/bridge.h:
+
+config.h:
 
 /usr/include/errno.h:
 
@@ -623,3 +625,15 @@ lib/sflow_api.h:
 lib/sflow.h:
 
 lib/vlan-bitmap.h:
+
+vswitchd/maoqos.h:
+
+/usr/include/malloc.h:
+
+/usr/include/x86_64-linux-gnu/sys/queue.h:
+
+ofproto/connmgr.h:
+
+lib/match.h:
+
+ofproto/ofproto.h:

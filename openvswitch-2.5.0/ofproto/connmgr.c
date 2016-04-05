@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+
+
+
 #include <config.h>
 
 #include "connmgr.h"
@@ -2423,3 +2426,4 @@ ofmonitor_wait(struct connmgr *mgr)
     }
     ovs_mutex_unlock(&ofproto_mutex);
 }
+

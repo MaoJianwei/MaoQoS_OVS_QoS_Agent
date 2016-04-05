@@ -48,12 +48,10 @@ vswitchd/ovs-vswitchd.o: vswitchd/ovs-vswitchd.c \
  /usr/include/x86_64-linux-gnu/sys/mman.h \
  /usr/include/x86_64-linux-gnu/bits/mman.h \
  /usr/include/x86_64-linux-gnu/bits/mman-linux.h vswitchd/bridge.h \
- lib/command-line.h lib/compiler.h include/openvswitch/compiler.h \
- lib/compiler.h lib/daemon.h \
- /usr/lib/gcc/x86_64-linux-gnu/5/include/stdbool.h lib/dirs.h lib/dpif.h \
- /usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h lib/netdev.h \
- include/openvswitch/types.h lib/packets.h /usr/include/inttypes.h \
+ /usr/include/inttypes.h /usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h \
+ /usr/include/stdint.h /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ lib/async-append.h lib/bfd.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include/stdbool.h lib/packets.h \
  /usr/include/netinet/in.h /usr/include/x86_64-linux-gnu/sys/socket.h \
  /usr/include/x86_64-linux-gnu/sys/uio.h \
  /usr/include/x86_64-linux-gnu/bits/uio.h \
@@ -65,7 +63,8 @@ vswitchd/ovs-vswitchd.o: vswitchd/ovs-vswitchd.c \
  /usr/include/x86_64-linux-gnu/asm/sockios.h \
  /usr/include/asm-generic/sockios.h \
  /usr/include/x86_64-linux-gnu/bits/socket2.h \
- /usr/include/x86_64-linux-gnu/bits/in.h lib/geneve.h \
+ /usr/include/x86_64-linux-gnu/bits/in.h lib/compiler.h \
+ include/openvswitch/compiler.h lib/geneve.h include/openvswitch/types.h \
  include/odp-netlink.h include/openvswitch/types.h lib/random.h \
  lib/hash.h lib/util.h /usr/include/arpa/inet.h \
  /usr/lib/gcc/x86_64-linux-gnu/5/include/stdarg.h lib/stdio.h \
@@ -91,24 +90,47 @@ vswitchd/ovs-vswitchd.o: vswitchd/ovs-vswitchd.c \
  include/openflow/openflow-1.1.h include/openflow/openflow-1.2.h \
  include/openflow/openflow-1.3.h include/openflow/openflow-1.4.h \
  include/openflow/openflow-1.5.h lib/unaligned.h lib/byte-order.h \
- lib/type-props.h lib/flow.h lib/bitmap.h include/openflow/nicira-ext.h \
- lib/dp-packet.h lib/netdev-dpdk.h lib/ovs-numa.h lib/dummy.h \
- lib/fatal-signal.h lib/memory.h lib/netdev.h lib/ovsdb-idl.h \
- lib/ovsdb-types.h /usr/lib/gcc/x86_64-linux-gnu/5/include/float.h \
- lib/uuid.h lib/poll-loop.h /usr/include/poll.h \
+ lib/type-props.h lib/bitmap.h lib/cfm.h lib/hmap.h lib/connectivity.h \
+ lib/coverage.h lib/ovs-thread.h /usr/include/pthread.h \
+ /usr/include/sched.h /usr/include/x86_64-linux-gnu/bits/sched.h \
+ /usr/include/x86_64-linux-gnu/bits/setjmp.h lib/ovs-atomic.h \
+ lib/ovs-atomic-c11.h /usr/lib/gcc/x86_64-linux-gnu/5/include/stdatomic.h \
+ include/openvswitch/thread.h include/openvswitch/util.h lib/daemon.h \
+ lib/dirs.h lib/dpif.h lib/netdev.h lib/flow.h lib/bitmap.h \
+ include/openflow/nicira-ext.h lib/dp-packet.h lib/netdev-dpdk.h \
+ lib/ovs-numa.h lib/dynamic-string.h lib/hash.h lib/hmap.h lib/hmapx.h \
+ lib/jsonrpc.h lib/lacp.h lib/list.h lib/ovs-lldp.h lib/lldp/lldpd.h \
+ lib/dp-packet.h lib/lldp/lldpd-structs.h /usr/include/net/if.h \
+ lib/lldp/aa-structs.h lib/lldp/lldp-const.h lib/packets.h \
+ lib/lldp/lldp-tlv.h include/openvswitch/vlog.h \
+ include/openvswitch/token-bucket.h lib/timer.h lib/timeval.h \
+ lib/mac-learning.h lib/heap.h lib/mcast-snooping.h lib/meta-flow.h \
+ /usr/include/netinet/ip6.h lib/ofp-errors.h lib/netdev.h lib/nx-match.h \
+ lib/meta-flow.h lib/ofp-print.h lib/ofp-util.h lib/match.h \
+ include/openflow/netronome-ext.h lib/ofpbuf.h ofproto/bond.h \
+ ofproto/ofproto-provider.h lib/classifier.h lib/cmap.h lib/ovs-rcu.h \
+ lib/pvector.h lib/rculist.h lib/guarded-list.h lib/heap.h lib/hindex.h \
+ lib/ofp-actions.h lib/ofp-util.h lib/ofp-errors.h ofproto/ofproto.h \
+ lib/flow.h ofproto/netflow.h lib/sset.h lib/rstp.h lib/smap.h lib/stp.h \
+ lib/ovs-atomic.h lib/ovs-rcu.h lib/ovs-thread.h lib/shash.h lib/simap.h \
+ lib/timeval.h lib/ovs-numa.h lib/poll-loop.h /usr/include/poll.h \
  /usr/include/x86_64-linux-gnu/sys/poll.h \
  /usr/include/x86_64-linux-gnu/bits/poll.h \
- /usr/include/x86_64-linux-gnu/bits/poll2.h lib/simap.h lib/hmap.h \
- lib/stream-ssl.h lib/stream.h lib/socket-util.h \
- /usr/include/x86_64-linux-gnu/sys/time.h /usr/include/netinet/in_systm.h \
- /usr/include/netinet/ip.h lib/svec.h lib/timeval.h lib/unixctl.h \
- lib/util.h include/openvswitch/vconn.h include/openvswitch/vlog.h \
- include/openvswitch/thread.h /usr/include/pthread.h /usr/include/sched.h \
- /usr/include/x86_64-linux-gnu/bits/sched.h \
- /usr/include/x86_64-linux-gnu/bits/setjmp.h include/openvswitch/util.h \
- include/openvswitch/token-bucket.h lib/vswitch-idl.h lib/ovsdb-data.h \
- lib/shash.h lib/ovsdb-idl-provider.h lib/ovsdb-idl.h lib/smap.h \
- lib/netdev-dpdk.h
+ /usr/include/x86_64-linux-gnu/bits/poll2.h lib/if-notifier.h lib/seq.h \
+ lib/sha1.h lib/socket-util.h /usr/include/x86_64-linux-gnu/sys/time.h \
+ /usr/include/netinet/in_systm.h /usr/include/netinet/ip.h lib/stream.h \
+ lib/socket-util.h lib/stream-ssl.h vswitchd/system-stats.h lib/util.h \
+ lib/unixctl.h lib/vlandev.h lib/vswitch-idl.h lib/ovsdb-data.h \
+ lib/ovsdb-types.h /usr/lib/gcc/x86_64-linux-gnu/5/include/float.h \
+ lib/uuid.h lib/shash.h lib/ovsdb-idl-provider.h lib/ovsdb-idl.h \
+ lib/smap.h vswitchd/xenserver.h lib/sflow_api.h /usr/include/unistd.h \
+ /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+ /usr/include/x86_64-linux-gnu/bits/environments.h \
+ /usr/include/x86_64-linux-gnu/bits/confname.h \
+ /usr/include/x86_64-linux-gnu/bits/unistd.h lib/sflow.h \
+ lib/vlan-bitmap.h lib/command-line.h lib/compiler.h lib/dummy.h \
+ lib/fatal-signal.h lib/memory.h lib/ovsdb-idl.h lib/svec.h \
+ include/openvswitch/vconn.h lib/netdev-dpdk.h
 
 /usr/include/stdc-predef.h:
 
@@ -238,21 +260,7 @@ lib/string.h:
 
 vswitchd/bridge.h:
 
-lib/command-line.h:
-
-lib/compiler.h:
-
-include/openvswitch/compiler.h:
-
-lib/compiler.h:
-
-lib/daemon.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/5/include/stdbool.h:
-
-lib/dirs.h:
-
-lib/dpif.h:
+/usr/include/inttypes.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h:
 
@@ -260,13 +268,13 @@ lib/dpif.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
 
-lib/netdev.h:
+lib/async-append.h:
 
-include/openvswitch/types.h:
+lib/bfd.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/stdbool.h:
 
 lib/packets.h:
-
-/usr/include/inttypes.h:
 
 /usr/include/netinet/in.h:
 
@@ -294,7 +302,13 @@ lib/packets.h:
 
 /usr/include/x86_64-linux-gnu/bits/in.h:
 
+lib/compiler.h:
+
+include/openvswitch/compiler.h:
+
 lib/geneve.h:
+
+include/openvswitch/types.h:
 
 include/odp-netlink.h:
 
@@ -400,6 +414,44 @@ lib/byte-order.h:
 
 lib/type-props.h:
 
+lib/bitmap.h:
+
+lib/cfm.h:
+
+lib/hmap.h:
+
+lib/connectivity.h:
+
+lib/coverage.h:
+
+lib/ovs-thread.h:
+
+/usr/include/pthread.h:
+
+/usr/include/sched.h:
+
+/usr/include/x86_64-linux-gnu/bits/sched.h:
+
+/usr/include/x86_64-linux-gnu/bits/setjmp.h:
+
+lib/ovs-atomic.h:
+
+lib/ovs-atomic-c11.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/stdatomic.h:
+
+include/openvswitch/thread.h:
+
+include/openvswitch/util.h:
+
+lib/daemon.h:
+
+lib/dirs.h:
+
+lib/dpif.h:
+
+lib/netdev.h:
+
 lib/flow.h:
 
 lib/bitmap.h:
@@ -412,21 +464,127 @@ lib/netdev-dpdk.h:
 
 lib/ovs-numa.h:
 
-lib/dummy.h:
+lib/dynamic-string.h:
 
-lib/fatal-signal.h:
+lib/hash.h:
 
-lib/memory.h:
+lib/hmap.h:
+
+lib/hmapx.h:
+
+lib/jsonrpc.h:
+
+lib/lacp.h:
+
+lib/list.h:
+
+lib/ovs-lldp.h:
+
+lib/lldp/lldpd.h:
+
+lib/dp-packet.h:
+
+lib/lldp/lldpd-structs.h:
+
+/usr/include/net/if.h:
+
+lib/lldp/aa-structs.h:
+
+lib/lldp/lldp-const.h:
+
+lib/packets.h:
+
+lib/lldp/lldp-tlv.h:
+
+include/openvswitch/vlog.h:
+
+include/openvswitch/token-bucket.h:
+
+lib/timer.h:
+
+lib/timeval.h:
+
+lib/mac-learning.h:
+
+lib/heap.h:
+
+lib/mcast-snooping.h:
+
+lib/meta-flow.h:
+
+/usr/include/netinet/ip6.h:
+
+lib/ofp-errors.h:
 
 lib/netdev.h:
 
-lib/ovsdb-idl.h:
+lib/nx-match.h:
 
-lib/ovsdb-types.h:
+lib/meta-flow.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/5/include/float.h:
+lib/ofp-print.h:
 
-lib/uuid.h:
+lib/ofp-util.h:
+
+lib/match.h:
+
+include/openflow/netronome-ext.h:
+
+lib/ofpbuf.h:
+
+ofproto/bond.h:
+
+ofproto/ofproto-provider.h:
+
+lib/classifier.h:
+
+lib/cmap.h:
+
+lib/ovs-rcu.h:
+
+lib/pvector.h:
+
+lib/rculist.h:
+
+lib/guarded-list.h:
+
+lib/heap.h:
+
+lib/hindex.h:
+
+lib/ofp-actions.h:
+
+lib/ofp-util.h:
+
+lib/ofp-errors.h:
+
+ofproto/ofproto.h:
+
+lib/flow.h:
+
+ofproto/netflow.h:
+
+lib/sset.h:
+
+lib/rstp.h:
+
+lib/smap.h:
+
+lib/stp.h:
+
+lib/ovs-atomic.h:
+
+lib/ovs-rcu.h:
+
+lib/ovs-thread.h:
+
+lib/shash.h:
+
+lib/simap.h:
+
+lib/timeval.h:
+
+lib/ovs-numa.h:
 
 lib/poll-loop.h:
 
@@ -438,13 +596,11 @@ lib/poll-loop.h:
 
 /usr/include/x86_64-linux-gnu/bits/poll2.h:
 
-lib/simap.h:
+lib/if-notifier.h:
 
-lib/hmap.h:
+lib/seq.h:
 
-lib/stream-ssl.h:
-
-lib/stream.h:
+lib/sha1.h:
 
 lib/socket-util.h:
 
@@ -454,35 +610,29 @@ lib/socket-util.h:
 
 /usr/include/netinet/ip.h:
 
-lib/svec.h:
+lib/stream.h:
 
-lib/timeval.h:
+lib/socket-util.h:
 
-lib/unixctl.h:
+lib/stream-ssl.h:
+
+vswitchd/system-stats.h:
 
 lib/util.h:
 
-include/openvswitch/vconn.h:
+lib/unixctl.h:
 
-include/openvswitch/vlog.h:
-
-include/openvswitch/thread.h:
-
-/usr/include/pthread.h:
-
-/usr/include/sched.h:
-
-/usr/include/x86_64-linux-gnu/bits/sched.h:
-
-/usr/include/x86_64-linux-gnu/bits/setjmp.h:
-
-include/openvswitch/util.h:
-
-include/openvswitch/token-bucket.h:
+lib/vlandev.h:
 
 lib/vswitch-idl.h:
 
 lib/ovsdb-data.h:
+
+lib/ovsdb-types.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/float.h:
+
+lib/uuid.h:
 
 lib/shash.h:
 
@@ -491,5 +641,39 @@ lib/ovsdb-idl-provider.h:
 lib/ovsdb-idl.h:
 
 lib/smap.h:
+
+vswitchd/xenserver.h:
+
+lib/sflow_api.h:
+
+/usr/include/unistd.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+
+/usr/include/x86_64-linux-gnu/bits/environments.h:
+
+/usr/include/x86_64-linux-gnu/bits/confname.h:
+
+/usr/include/x86_64-linux-gnu/bits/unistd.h:
+
+lib/sflow.h:
+
+lib/vlan-bitmap.h:
+
+lib/command-line.h:
+
+lib/compiler.h:
+
+lib/dummy.h:
+
+lib/fatal-signal.h:
+
+lib/memory.h:
+
+lib/ovsdb-idl.h:
+
+lib/svec.h:
+
+include/openvswitch/vconn.h:
 
 lib/netdev-dpdk.h:
