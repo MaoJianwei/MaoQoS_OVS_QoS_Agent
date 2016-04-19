@@ -3084,7 +3084,7 @@ bridge_create(const struct ovsrec_bridge *br_cfg)
     if(NULL != br->MaoQos){
 
     	maoQosRun(br->MaoQos);
-        maoLog("device is going on!", br->name);
+        maoLog(INFO, "device is going on!", br->name);
     }
 }
 
@@ -3097,11 +3097,11 @@ bridge_destroy(struct bridge *br, bool del)
     if (br) {
 
 
-    	maoLog("INFO, Device is turning off!", br->name);
+    	maoLog(INFO, "Device is turning off!", br->name);
         maoQosShutdown(br->MaoQos);
         maoQosFreeOne(br->MaoQos);
         br->MaoQos = NULL;
-        maoLog("INFO, Device power off!", br->name);
+        maoLog(INFO, "Device power off!", br->name);
 
 
 

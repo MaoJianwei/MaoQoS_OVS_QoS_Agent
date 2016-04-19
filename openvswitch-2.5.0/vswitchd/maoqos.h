@@ -15,7 +15,9 @@
 #define NULL ((void *)0)
 #endif
 
+char * mao_bridge_get_port_name(struct bridge * br);
 char * mao_bridge_get_controller_IP(struct bridge * br);
+char * mao_bridge_get_Bridge_ID(struct bridge * br);
 
 /* for c queue */
 struct cmdQueueEntry{
@@ -47,9 +49,14 @@ struct maoQos{
 	struct bridge * myBoss;
 };
 
-
 #define MaoLogDefaultMaster "Mao SYSTEM"
-int maoLog(char * logStr, char * log_master_name);
+enum MaoLogLevel {
+    INFO = 1,/*Mao Log Info Level*/
+    DEBUG = 2,/*Mao Log Debug Level*/
+	WARNING = 3,/*Mao Log Warning Level*/
+	ERROR = 4/*Mao Log Error Level*/
+};
+int maoLog(enum MaoLogLevel level, char * logStr, char * log_master_name);
 
 
 void maoInitQueue(struct cmdQueueHead * queue);
@@ -69,7 +76,7 @@ void * workBash(void * args);
 void * workSocket(void * args);
 
 char * maoParseCmdProtocol(char * protocolBuf);
-int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShutdown);
+int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShutdown, char * log_master_name);
 
 
 /*Mao: below is reference copy*/

@@ -12,10 +12,17 @@
 
 
 
-int maoLog(char * logStr, char * log_master_name) {
+int maoLog(enum MaoLogLevel level, char * logStr, char * log_master_name) {
 
-	if (NULL == logStr)
+	if( level<1 || level>4 ){
+		maoLog(WARNING, "log level out of scope", NULL);
+		return 3;
+	}
+
+	if (NULL == logStr){
+		maoLog(WARNING, "logStr is NULL", NULL);
 		return 2;
+	}
 
 	if (NULL == log_master_name)
 		log_master_name = MaoLogDefaultMaster;
@@ -33,12 +40,32 @@ int maoLog(char * logStr, char * log_master_name) {
 	FILE * log = fopen(logName, "a+");
 
 	if (NULL == log){
+		maoLog(WARNING, "log is NULL", NULL);
 		free(logName);
 		return 1;
 	}
 
-	char * logTemp = (char *) calloc(1,strlen(logStr) + strlen(log_master_name) + 2 + 1 + 1); // +2 for ", "    +1 for \n    +1 for \0
-	sprintf(logTemp, "%s, %s\n", log_master_name, logStr);
+	char * levelStr = NULL;
+
+	switch(level){
+	case INFO:
+		levelStr = "INFO";
+		break;
+	case DEBUG:
+		levelStr = "DEBUG";
+		break;
+	case WARNING:
+		levelStr = "WARNING";
+		break;
+	case ERROR:
+		levelStr = "ERROR";
+		break;
+	default:
+		levelStr = "UNKNOWN";
+	}
+
+	char * logTemp = (char *) calloc(1,strlen(logStr) + strlen(log_master_name) + strlen(levelStr) + 2 +2 + 1 + 1); // +2 for ", "   +2 for ": "    +1 for \n    +1 for \0
+	sprintf(logTemp, "%s, %s: %s\n", log_master_name, levelStr, logStr);
 
 	fputs(logTemp, log);
 
@@ -49,6 +76,40 @@ int maoLog(char * logStr, char * log_master_name) {
 	return 0;
 }
 
+/**
+ * Attention! need free outside!
+ * result > 0 for success.
+ */
+char * mao_bridge_get_port_name(struct bridge * br)
+{
+
+    struct port *port, *next;
+    char * bridge_ports = (char*) calloc(1,1024);
+    int pointer = 0;
+
+
+    int result = 0;
+    HMAP_FOR_EACH_SAFE (port, next, hmap_node, &br->ports) {
+
+    	result++;
+
+    	strcpy(bridge_ports + pointer, port->name);
+        pointer += strlen(port->name);
+        *( bridge_ports + (pointer)++ ) = ',';
+    }
+
+    if( result == 0 ){
+    	maoLog(WARNING, "port is not ready", br->name);
+    	free(bridge_ports);
+    	bridge_ports = NULL;
+    	return NULL;
+    }
+
+    *(bridge_ports + pointer - 1) = '\n';
+    *(bridge_ports + pointer) = 0;
+
+    return bridge_ports;
+}
 
 
 /**
@@ -57,17 +118,17 @@ int maoLog(char * logStr, char * log_master_name) {
 char * mao_bridge_get_controller_IP(struct bridge * br)
 {
     if(NULL == br->ofproto){
-    	maoLog("Warning, ofproto is NULL", br->name);
+    	maoLog(WARNING, "ofproto is NULL", br->name);
     	return NULL;
     }
 
     if(NULL == br->ofproto->connmgr){
-    	maoLog("Warning, connmgr is NULL", br->name);
+    	maoLog(WARNING, "connmgr is NULL", br->name);
     	return NULL;
     }
 
     if(NULL == &(br->ofproto->connmgr->controllers)){
-    	maoLog("Warning, controllers is NULL", br->name);
+    	maoLog(WARNING, "controllers is NULL", br->name);
     	return NULL;
     }
 
@@ -82,13 +143,32 @@ char * mao_bridge_get_controller_IP(struct bridge * br)
 
     	return controllerIP;
     }
-    maoLog("Warning: Exit each, return NULL.", br->name);
+    maoLog(WARNING, "Exit each, return NULL.", br->name);
     free(controllerIP);
     return NULL;
 }
 
+/**
+ * Attention! need free outside!
+ */
+char * mao_bridge_get_Bridge_ID(struct bridge * br){
+
+	if(NULL == br || NULL == br->ofproto)
+		return NULL;
 
 
+	const int dpidStrLen = 16;
+
+	uint64_t dpidInt = br->ofproto->datapath_id;
+
+	char * dpid = (char*)calloc(17,1);
+
+	for(int i = 0; i<dpidStrLen ; i++){
+		sprintf(dpid+i,"%01X", (unsigned int)((dpidInt >> 4*(dpidStrLen -1 -i)) & 0xF));
+	}
+
+	return dpid;
+}
 
 
 void maoInitQueue(struct cmdQueueHead * queue) {
@@ -226,8 +306,6 @@ void maoQosShutdown(struct maoQos * maoQosModule) {
 	pthread_join(*(maoQosModule->bashThread), NULL);
 	pthread_join(*(maoQosModule->socketThread), NULL);
 
-	//TODO:need pthread_join?
-	//if use pthread_join, invoke maoQosFreeOne inside or outside
 }
 
 /**
@@ -235,16 +313,19 @@ void maoQosShutdown(struct maoQos * maoQosModule) {
  */
 void * workBash(void * module) {
 
+
 	//TODO: Initialize
 	char * cmdHead = "echo 123 | sudo -S ";
 
 	struct maoQos * maoQosModule = (struct maoQos *) module;
 
-	maoLog("INFO, Bash working...", maoQosModule->myBoss->name);
+	maoLog(INFO, "Bash working...", maoQosModule->myBoss->name);
+
+
 
 	while (0 == maoQosModule->needShutdown) {
 
-		maoLog("INFO, lock mutex", maoQosModule->myBoss->name);
+		maoLog(INFO, "lock mutex", maoQosModule->myBoss->name);
 
 
 		pthread_mutex_lock(maoQosModule->pMutex);
@@ -269,14 +350,14 @@ void * workBash(void * module) {
 		pthread_mutex_unlock(maoQosModule->pMutex);
 
 		if (NULL == cmdPayload) {
-			maoLog("Warning, cmd string is NULL", maoQosModule->myBoss->name);
+			maoLog(WARNING, "cmd string is NULL", maoQosModule->myBoss->name);
 			continue;
 		}
 
 
 
-		maoLog("INFO, have got cmd string", maoQosModule->myBoss->name);
-		maoLog(cmdPayload, maoQosModule->myBoss->name);
+		maoLog(INFO, "have got cmd string", maoQosModule->myBoss->name);
+		maoLog(INFO, cmdPayload, maoQosModule->myBoss->name);
 
 		char * cmdBash = (char*) calloc(1, strlen(cmdHead) + strlen(cmdPayload) + 1); // should not use sizeof
 		strcat(cmdBash, cmdHead);
@@ -284,13 +365,13 @@ void * workBash(void * module) {
 
 
 
-		maoLog("INFO, run bash", maoQosModule->myBoss->name);
-		maoLog(cmdBash, maoQosModule->myBoss->name);
+		maoLog(INFO, "run bash", maoQosModule->myBoss->name);
+		maoLog(INFO, cmdBash, maoQosModule->myBoss->name);
 
 		FILE * bashPipe = popen(cmdBash, "r");
 		pclose(bashPipe);
 
-		maoLog("INFO, run bash finish", maoQosModule->myBoss->name);
+		maoLog(INFO, "run bash finish", maoQosModule->myBoss->name);
 
 
 
@@ -300,7 +381,7 @@ void * workBash(void * module) {
 
 	//TODO: any Destroy
 
-	maoLog("INFO, Bash Thread is turning off", maoQosModule->myBoss->name);
+	maoLog(INFO, "Bash Thread is turning off", maoQosModule->myBoss->name);
 
 	return NULL;
 	//pthread_exit(NULL);
@@ -316,43 +397,74 @@ void * workSocket(void * module) {
 	struct maoQos * maoQosModule = (struct maoQos *) module;
 
 
-	maoLog("INFO, Socket working...", maoQosModule->myBoss->name);
+	maoLog(INFO, "Socket working...", maoQosModule->myBoss->name);
 
 
 	while (0 == maoQosModule->needShutdown) {
 
-		maoLog("INFO, Get controller's IP...", maoQosModule->myBoss->name);
+		maoLog(INFO, "Get controller's IP...", maoQosModule->myBoss->name);
 
 		char * controllerIP = NULL;
-		char brMac[18] = { 0 };
+		char * dpid = NULL;
 		int connectSocket = -1;
 		while (0 == maoQosModule->needShutdown) {
 
 			controllerIP = mao_bridge_get_controller_IP(maoQosModule->myBoss);
 
 			if (NULL == controllerIP) {
-				maoLog("INFO, Wait controller's IP...", maoQosModule->myBoss->name);
+				maoLog(INFO, "Wait controller's IP...", maoQosModule->myBoss->name);
 				sleep(1);
 				continue;
 			}
-			maoLog("INFO, Get controller's IP OK!", maoQosModule->myBoss->name);
-
-
+			maoLog(INFO, "Get controller's IP OK!", maoQosModule->myBoss->name);
 
 			if (0 != maoQosModule->needShutdown) {
 				break;
 			}
 
-			sprintf(brMac, "%02X:%02X:%02X:%02X:%02X:%02X",
-					maoQosModule->myBoss->default_ea.ea[0],
-					maoQosModule->myBoss->default_ea.ea[1],
-					maoQosModule->myBoss->default_ea.ea[2],
-					maoQosModule->myBoss->default_ea.ea[3],
-					maoQosModule->myBoss->default_ea.ea[4],
-					maoQosModule->myBoss->default_ea.ea[5]);
 
-			maoLog("INFO, Get My MAC OK!", maoQosModule->myBoss->name);
-			maoLog(brMac, maoQosModule->myBoss->name);
+			char * ports = NULL;
+			while(0 == maoQosModule->needShutdown){
+
+				ports = mao_bridge_get_port_name(maoQosModule->myBoss);
+				if(ports == NULL){
+					sleep(1);
+					continue;
+				}
+				break;
+			}
+
+			if (0 != maoQosModule->needShutdown) {
+				break;
+			}
+
+
+			dpid = mao_bridge_get_Bridge_ID(maoQosModule->myBoss);
+			if (NULL == dpid) {
+
+				free(controllerIP);
+				controllerIP = NULL;
+				free(ports);
+				ports = NULL;
+
+				maoLog(WARNING, "Wait my DPID...", maoQosModule->myBoss->name);
+
+				sleep(1);
+				continue;
+			}
+			maoLog(INFO, "Get My DPID OK!", maoQosModule->myBoss->name);
+			maoLog(INFO, dpid, maoQosModule->myBoss->name);
+
+//			sprintf(brMac, "%02X:%02X:%02X:%02X:%02X:%02X",
+//					maoQosModule->myBoss->default_ea.ea[0],
+//					maoQosModule->myBoss->default_ea.ea[1],
+//					maoQosModule->myBoss->default_ea.ea[2],
+//					maoQosModule->myBoss->default_ea.ea[3],
+//					maoQosModule->myBoss->default_ea.ea[4],
+//					maoQosModule->myBoss->default_ea.ea[5]);
+//
+//			maoLog("INFO, Get My MAC OK!", maoQosModule->myBoss->name);
+//			maoLog(brMac, maoQosModule->myBoss->name);
 
 
 			struct sockaddr_in controllerSockaddr = { 0 };
@@ -365,12 +477,18 @@ void * workSocket(void * module) {
 				free(controllerIP);
 				controllerIP = NULL;
 
-				maoLog("Error, convert IP fail", maoQosModule->myBoss->name);
+				free(dpid);
+				dpid = NULL;
+
+				free(ports);
+				ports = NULL;
+
+				maoLog(ERROR, "convert IP fail", maoQosModule->myBoss->name);
 
 				sleep(1);
 				continue;
 			}
-			maoLog("INFO, convert IP OK!", maoQosModule->myBoss->name);
+			maoLog(INFO, "convert IP OK!", maoQosModule->myBoss->name);
 
 
 			connectSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -380,15 +498,21 @@ void * workSocket(void * module) {
 				free(controllerIP);
 				controllerIP = NULL;
 
+				free(dpid);
+				dpid = NULL;
+
+				free(ports);
+				ports = NULL;
+
 				close(connectSocket);
 				connectSocket = -1;
 
-				maoLog("Error, connect fail", maoQosModule->myBoss->name);
+				maoLog(WARNING, "connect fail", maoQosModule->myBoss->name);
 
 				sleep(1);
 				continue;
 			}
-			maoLog("INFO, connect controller OK!", maoQosModule->myBoss->name);
+			maoLog(INFO, "connect controller OK!", maoQosModule->myBoss->name);
 
 
 
@@ -399,22 +523,28 @@ void * workSocket(void * module) {
 				free(controllerIP);
 				controllerIP = NULL;
 
+				free(dpid);
+				dpid = NULL;
+
+				free(ports);
+				ports = NULL;
+
 				close(connectSocket);
 				connectSocket = -1;
 
-				maoLog("Error, set timeout fail", maoQosModule->myBoss->name);
+				maoLog(ERROR, "set timeout fail", maoQosModule->myBoss->name);
 
 				sleep(1);
 				continue;
 			}
-			maoLog("INFO, set timeout OK!", maoQosModule->myBoss->name);
+			maoLog(INFO, "set timeout OK!", maoQosModule->myBoss->name);
 
 
-			int dataLen = strlen(brMac);
+			int dataLen = strlen(dpid);
 			int dataSentLen = 0;
 			int sendRet = 0;
 			while(-1 != sendRet && dataSentLen != dataLen){
-				sendRet = send(connectSocket, brMac+dataSentLen, dataLen - dataSentLen, 0);
+				sendRet = send(connectSocket, dpid+dataSentLen, dataLen - dataSentLen, 0);
 				dataSentLen += sendRet;
 			}
 			if(-1 == sendRet){
@@ -422,47 +552,96 @@ void * workSocket(void * module) {
 				free(controllerIP);
 				controllerIP = NULL;
 
+				free(dpid);
+				dpid = NULL;
+
+				free(ports);
+				ports = NULL;
+
 				close(connectSocket);
 				connectSocket = -1;
 
-				maoLog("Error, send MAC fail", maoQosModule->myBoss->name);
+				maoLog(ERROR, "send MAC fail", maoQosModule->myBoss->name);
 
 				sleep(1);
 				continue;
 			}
-			maoLog("INFO, send MAC OK!", maoQosModule->myBoss->name);
+			maoLog(INFO, "send MAC OK!", maoQosModule->myBoss->name);
+
+			dataLen = strlen(ports);
+			dataSentLen = 0;
+			sendRet = 0;
+			while (-1 != sendRet && dataSentLen != dataLen) {
+				sendRet = send(connectSocket, ports + dataSentLen,
+						dataLen - dataSentLen, 0);
+				dataSentLen += sendRet;
+			}
+			if (-1 == sendRet) {
+
+				free(controllerIP);
+				controllerIP = NULL;
+
+				free(dpid);
+				dpid = NULL;
+
+				free(ports);
+				ports = NULL;
+
+				close(connectSocket);
+				connectSocket = -1;
+
+				maoLog(ERROR, "send port fail", maoQosModule->myBoss->name);
+
+				sleep(1);
+				continue;
+			}
+			maoLog(INFO, "send port OK!", maoQosModule->myBoss->name);
 
 			break;
 		}
-		maoLog("INFO, quit Connect and Hello", maoQosModule->myBoss->name);
+		maoLog(INFO, "quit Connect and Hello", maoQosModule->myBoss->name);
 
 
-		//char buf[1024] = { 0 };
+
 
 		// Mao Qos Protocol v0.9
 		while (0 == maoQosModule->needShutdown) {
 
-			maoLog("INFO, wait for protocol length", maoQosModule->myBoss->name);
+			maoLog(INFO, "wait for protocol length", maoQosModule->myBoss->name);
 
 			// ------ recv lengthBehind
 			char * lenBuf = (char*) calloc(1, 4);
-			int maoRecvRet = maoSocketRecv(&connectSocket, lenBuf, 4, &(maoQosModule->needShutdown));// TODO: Further deal, robustness
+			int maoRecvRet = maoSocketRecv(&connectSocket, lenBuf, 4, &(maoQosModule->needShutdown), maoQosModule->myBoss->name);// TODO: Further deal, robustness
 			if (-1 == maoRecvRet) {
+
+				maoLog(WARNING, "recv protocol length fail", maoQosModule->myBoss->name);
 
 				free(lenBuf);
 				lenBuf = NULL;
 
-				maoLog("Warning, recv protocol length fail", maoQosModule->myBoss->name);
+				break; // different from above, because the above will re-init the socket
+			} else if (0 == maoRecvRet) {
 
-				break;// different from above, because the above will re-init the socket
+				maoLog(WARNING, "Controller Peer shutdown!", maoQosModule->myBoss->name);
+
+				free(lenBuf);
+				lenBuf = NULL;
+
+				break;
 			}
 
-			maoLog("INFO, get protocol length", maoQosModule->myBoss->name);
+			maoLog(INFO, "parse protocol length...", maoQosModule->myBoss->name);
+
 
 			int cmdLength = 0;
 			memcpy(&cmdLength, lenBuf, 4);
 			free(lenBuf);
 			lenBuf = NULL;
+
+			char recvrecv[28] = {0};
+			sprintf(recvrecv, "INFO, protocol length: %d", cmdLength);
+			maoLog(INFO, recvrecv, maoQosModule->myBoss->name);
+
 
 			//wait length cost much time, so we should check needShutdown here
 			if (0 != maoQosModule->needShutdown) {
@@ -470,22 +649,24 @@ void * workSocket(void * module) {
 			}
 
 
-			maoLog("INFO, wait protocol content", maoQosModule->myBoss->name);
+			maoLog(INFO, "wait protocol content", maoQosModule->myBoss->name);
 
 			// ------ recv cmd string
 			char * protocolBuf = (char*) calloc(1, cmdLength+1);
-			maoRecvRet = maoSocketRecv(&connectSocket, protocolBuf, cmdLength, &(maoQosModule->needShutdown)); // TODO: Further deal, robustness
+			maoRecvRet = maoSocketRecv(&connectSocket, protocolBuf, cmdLength, &(maoQosModule->needShutdown), maoQosModule->myBoss->name); // TODO: Further deal, robustness
 			if (-1 == maoRecvRet) {
 
 				free(protocolBuf);
 				protocolBuf = NULL;
 
-				maoLog("Warning, recv cmd string fail", maoQosModule->myBoss->name);
+				maoLog(WARNING, "recv cmd string fail", maoQosModule->myBoss->name);
 
 				break; // different from above, because the above will re-init the socket
 			}
+			maoLog(INFO, protocolBuf, maoQosModule->myBoss->name);
 
-			maoLog("INFO, start parse cmd", maoQosModule->myBoss->name);
+			maoLog(INFO, "start parse cmd", maoQosModule->myBoss->name);
+
 
 			char * cmd = maoParseCmdProtocol(protocolBuf);
 
@@ -493,8 +674,8 @@ void * workSocket(void * module) {
 			protocolBuf = NULL;
 
 
-			maoLog("INFO, cmd ready for enqueue", maoQosModule->myBoss->name);
-			maoLog(cmd, maoQosModule->myBoss->name);
+			maoLog(INFO, "cmd ready for enqueue...", maoQosModule->myBoss->name);
+			maoLog(INFO, cmd, maoQosModule->myBoss->name);
 
 
 			pthread_mutex_lock(maoQosModule->pMutex);
@@ -505,19 +686,23 @@ void * workSocket(void * module) {
 
 			pthread_cond_signal(maoQosModule->pCond);
 
-			maoLog("INFO, cmd is enqueued, signal is sent", maoQosModule->myBoss->name);
+
+			maoLog(INFO, "cmd is enqueued, signal is sent", maoQosModule->myBoss->name);
 
 		}
-		maoLog("INFO, quit Protocol Communication", maoQosModule->myBoss->name);
+		maoLog(INFO, "quit Protocol Communication", maoQosModule->myBoss->name);
 
 		close(connectSocket);
 		connectSocket = -1;
+
+		free(dpid);
+		dpid = NULL;
 
 		free(controllerIP);
 		controllerIP = NULL;
 	}
 
-	maoLog("INFO, Socket Thread is turning off", maoQosModule->myBoss->name);
+	maoLog(INFO, "Socket Thread is turning off", maoQosModule->myBoss->name);
 
 	return NULL;
 	//pthread_exit(NULL);
@@ -541,23 +726,53 @@ char * maoParseCmdProtocol(char * protocolBuf){
  * outside should check needShutdown immediately
  * @ return should not be used in normal way, except -1
  */
-int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShutdown){
+int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShutdown, char * log_master_name){
 
 	int dataRecvLen = 0;
 	int recvRet = 0;
-	while ( ((-1 != recvRet)||((-1 == recvRet)&&(11 == errno))) && dataRecvLen != wantBytes && 0 == *needShutdown ) {
 
-		recvRet = recv(*connectSocket, buf+recvRet, wantBytes-recvRet, 0);
-		if(recvRet > 0){
+	char recvrecv[100] = {0};
+	sprintf(recvrecv, "start recv %d, %d, %d", dataRecvLen, recvRet, wantBytes);
+	maoLog(DEBUG, recvrecv, log_master_name);
+
+	while (((-1 != recvRet) || ((-1 == recvRet) && (11 == errno)))
+			&& dataRecvLen != wantBytes && 0 == *needShutdown) {
+
+		recvRet = recv(*connectSocket, buf + dataRecvLen, wantBytes - dataRecvLen, 0);
+
+		if (recvRet > 0) {
 			dataRecvLen += recvRet;
+
+			char recvrecv11[10] = { 0 };
+			sprintf(recvrecv11, "%d", recvRet);
+			maoLog(DEBUG, recvrecv11, log_master_name);
+
+			maoLog(DEBUG, buf, log_master_name);
+
+		} else if (0 == recvRet) {
+			// peer shutdown
+			break;
+		} else if (11 == errno) {
+			//maoLog(DEBUG, "recv wait again...", log_master_name);
+			sleep(1);
+		}else{
+			maoLog(ERROR,"no deal case of RECV ret!", log_master_name);
 		}
 	}
 
+	memset(recvrecv, 0, 100);
+	sprintf(recvrecv, "end recv %d, %d, %d", dataRecvLen, recvRet, wantBytes);
+	maoLog(DEBUG, recvrecv, log_master_name);
+
 	if (-1 == recvRet) {
 		return -1;
+	}else if(0 == recvRet){
+		return 0;
 	}else{
-		if(dataRecvLen != wantBytes){
-			maoLog("Error, maoSocketRecv length not equal", NULL);
+		if(dataRecvLen != wantBytes && 0 == *needShutdown){
+			maoLog(ERROR, "maoSocketRecv length not equal", log_master_name);
+		}else if(1 == *needShutdown){
+			maoLog(WARNING, "maoSocketRecv while shutdown", log_master_name);
 		}
 		return dataRecvLen;
 	}
