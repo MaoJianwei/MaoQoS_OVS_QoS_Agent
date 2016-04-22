@@ -433,6 +433,8 @@ void * workSocket(void * module) {
 				}
 				break;
 			}
+			maoLog(INFO, "Get ports OK!", maoQosModule->myBoss->name);
+			maoLog(INFO, ports, maoQosModule->myBoss->name);
 
 			if (0 != maoQosModule->needShutdown) {
 				break;
@@ -444,6 +446,7 @@ void * workSocket(void * module) {
 
 				free(controllerIP);
 				controllerIP = NULL;
+
 				free(ports);
 				ports = NULL;
 
@@ -571,6 +574,7 @@ void * workSocket(void * module) {
 			dataLen = strlen(ports);
 			dataSentLen = 0;
 			sendRet = 0;
+			maoLog(INFO, "send port ...", maoQosModule->myBoss->name);
 			while (-1 != sendRet && dataSentLen != dataLen) {
 				sendRet = send(connectSocket, ports + dataSentLen,
 						dataLen - dataSentLen, 0);
@@ -754,7 +758,7 @@ int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShut
 			break;
 		} else if (11 == errno) {
 			//maoLog(DEBUG, "recv wait again...", log_master_name);
-			sleep(1);
+			usleep(100000);
 		}else{
 			maoLog(ERROR,"no deal case of RECV ret!", log_master_name);
 		}
