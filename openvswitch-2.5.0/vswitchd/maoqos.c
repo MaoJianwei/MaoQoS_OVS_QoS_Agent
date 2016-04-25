@@ -564,12 +564,12 @@ void * workSocket(void * module) {
 				close(connectSocket);
 				connectSocket = -1;
 
-				maoLog(ERROR, "send MAC fail", maoQosModule->myBoss->name);
+				maoLog(ERROR, "send DPID fail", maoQosModule->myBoss->name);
 
 				sleep(1);
 				continue;
 			}
-			maoLog(INFO, "send MAC OK!", maoQosModule->myBoss->name);
+			maoLog(INFO, "send DPID OK!", maoQosModule->myBoss->name);
 
 			dataLen = strlen(ports);
 			dataSentLen = 0;
@@ -713,6 +713,8 @@ void * workSocket(void * module) {
 }
 
 /**
+ * interface for extension in the future
+ *
  * Mao Qos Protocol v0.9
  * protocolBuf should be free outside
  * @return: calloc inside, should be free outside
