@@ -4,6 +4,7 @@
 #include <arpa/inet.h>  /*inet_pton */
 #include <error.h>
 
+
 #include <stdio.h>
 #include <unistd.h>
 
@@ -14,7 +15,7 @@
 
 int maoLog(enum MaoLogLevel level, char * logStr, char * log_master_name) {
 
-	if( level<1 || level>4 ){
+	if( level<INFO || level>TRACE ){
 		maoLog(WARNING, "log level out of scope", NULL);
 		return 3;
 	}
@@ -59,6 +60,9 @@ int maoLog(enum MaoLogLevel level, char * logStr, char * log_master_name) {
 		break;
 	case ERROR:
 		levelStr = "ERROR";
+		break;
+	case TRACE:
+		levelStr = "TRACE";
 		break;
 	default:
 		levelStr = "UNKNOWN";
@@ -368,8 +372,16 @@ void * workBash(void * module) {
 		maoLog(INFO, "run bash", maoQosModule->myBoss->name);
 		maoLog(INFO, cmdBash, maoQosModule->myBoss->name);
 
+		// ---------- demonstration ----------
+		recordRunStartTimestamp();
+		// ---------- demonstration ----------
+
 		FILE * bashPipe = popen(cmdBash, "r");
 		pclose(bashPipe);
+
+		// ---------- demonstration ----------
+		recordRunOverTimestamp();
+		// ---------- demonstration ----------
 
 		maoLog(INFO, "run bash finish", maoQosModule->myBoss->name);
 
@@ -634,6 +646,7 @@ void * workSocket(void * module) {
 				break;
 			}
 
+
 			maoLog(INFO, "parse protocol length...", maoQosModule->myBoss->name);
 
 
@@ -667,6 +680,13 @@ void * workSocket(void * module) {
 
 				break; // different from above, because the above will re-init the socket
 			}
+
+			// ---------- demonstration ----------
+			maoLog(ERROR, "RECV LOG start", maoQosModule->myBoss->name);
+			recordRecvTimestamp();
+			maoLog(ERROR, "RECV LOG OK", maoQosModule->myBoss->name);
+			// ---------- demonstration ----------
+
 			maoLog(INFO, protocolBuf, maoQosModule->myBoss->name);
 
 			maoLog(INFO, "start parse cmd", maoQosModule->myBoss->name);
@@ -784,4 +804,43 @@ int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShut
 	}
 }
 
+void recordRecvTimestamp(void){
+
+	static int count = 1;
+
+	struct timespec tSpec;
+	memset(&tSpec, 0, sizeof(tSpec));
+	clock_gettime(CLOCK_MONOTONIC, &tSpec);
+
+	char log[100] = { 0 };
+	sprintf(log, "Recv Count:%d,%d,%d", count++, tSpec.tv_sec, tSpec.tv_nsec);
+
+	maoLog(TRACE, log, NULL);
+}
+void recordRunStartTimestamp(void){
+
+	static int count = 1;
+
+	struct timespec tSpec;
+	memset(&tSpec, 0, sizeof(tSpec));
+	clock_gettime(CLOCK_MONOTONIC, &tSpec);
+
+	char log[100] = { 0 };
+	sprintf(log, "Run Start Count:%d,%d,%d", count++, tSpec.tv_sec, tSpec.tv_nsec);
+
+	maoLog(TRACE, log, NULL);
+}
+void recordRunOverTimestamp(void){
+
+	static int count = 1;
+
+	struct timespec tSpec;
+	memset(&tSpec, 0, sizeof(tSpec));
+	clock_gettime(CLOCK_MONOTONIC, &tSpec);
+
+	char log[100] = { 0 };
+	sprintf(log, "Run Over Count:%d,%d,%d", count++, tSpec.tv_sec, tSpec.tv_nsec);
+
+	maoLog(TRACE, log, NULL);
+}
 
