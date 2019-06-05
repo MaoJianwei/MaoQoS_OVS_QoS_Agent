@@ -54,7 +54,8 @@ enum MaoLogLevel {
     INFO = 1,/*Mao Log Info Level*/
     DEBUG = 2,/*Mao Log Debug Level*/
 	WARNING = 3,/*Mao Log Warning Level*/
-	ERROR = 4/*Mao Log Error Level*/
+	ERROR = 4,/*Mao Log Error Level*/
+	TRACE = 5/*Mao Log Trace Level*/
 };
 int maoLog(enum MaoLogLevel level, char * logStr, char * log_master_name);
 
@@ -77,6 +78,10 @@ void * workSocket(void * args);
 
 char * maoParseCmdProtocol(char * protocolBuf);
 int maoSocketRecv(int * connectSocket, char * buf, int wantBytes, int * needShutdown, char * log_master_name);
+
+void recordRecvTimestamp(void);
+void recordRunStartTimestamp(void);
+void recordRunOverTimestamp(void);
 
 
 /*Mao: below is reference copy*/
